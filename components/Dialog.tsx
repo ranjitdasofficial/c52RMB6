@@ -147,8 +147,8 @@ export function DialogBox() {
             case "Fan":
                 return <div className="w-full flex gap-2 flex-col justify-center items-center">
                     <img src="/fan.svg" className={`w-[200px] animate-spin h-[200px] ${fanMap[data.fan as keyof typeof fanMap]}`} alt="" />
-                    <div className="w-full  flex gap-2 items-center justify-center">{fanSpeed.map((v) => {
-                        return <span  onClick={() => {
+                    <div className="w-full  flex gap-2 items-center justify-center">{fanSpeed.map((v,i) => {
+                        return <span key={i}  onClick={() => {
                             dispatch(setData({
                                 ac: data.ac,
                                 bulb: data.bulb,
