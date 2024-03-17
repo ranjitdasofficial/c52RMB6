@@ -18,13 +18,19 @@ import { Switch } from "./ui/switch"
 import { SketchPicker, SliderPicker } from 'react-color'
 import SVGLed from "./SVGLed"
 import CircularSlider from "react-circular-slider-svg";
+import { loadToast, updateToast } from "@/lib/lib"
+import { UpdateDataToDb, getData } from "@/serverActions/actions"
+import { toast } from "react-toastify"
 const fanMap = {
     1: "duration-1000",
-    2: "duration-900",
-    3: "duration-800",
-    4: "duration-700",
-    5: "duration-600",
+    2: "duration-800",
+    3: "duration-700",
+    4: "duration-600",
+    5: "duration-500",
 }
+
+
+
 
 const fanSpeed = [1, 2, 3, 4, 5];
 
@@ -43,43 +49,41 @@ export function DialogBox() {
 
 
 
-    const updateData = async (data: any) => {
+    const updateData = async (data: any, event: string) => {
         console.log(data)
-        const res = await fetch('https://kodessphere-api.vercel.app/devices', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        });
+        const toastId = loadToast(`Processing Request:${event}`);
+        try {
 
-        if (res.status === 200) {
-            const data = await res.json();
-            console.log(data);
-            getData();
-        }
-
-
-    }
-
-    const getData = async () => {
-        const res = await fetch('https://kodessphere-api.vercel.app/devices/c52RMB6', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
+            const updateD = await UpdateDataToDb(data);
+            if (updateD.status === 200) {
+                return updateToast(toastId, `Successfully Updated:${event}`, "success");
             }
-        });
 
-        if (res.status === 200) {
-            const data = await res.json();
-            console.log(data);
-            dispatch(setData(data))
+            return updateToast(toastId, updateD.message, "error");
+
+
+        } catch (error) {
+            return updateToast(toastId, "Internal Server Error", "error");
+
         }
-        // console.log(data);
 
-        console.log("error", res)
+
+
+
 
     }
+
+
+    const getDatas = async () => {
+        const res = await getData();
+        if (res.status === 200) {
+            return dispatch(setData(res.data));
+        }
+
+        return toast.error(res.message)
+    }
+
+
 
 
     const maps = (event: string,) => {
@@ -105,7 +109,7 @@ export function DialogBox() {
                                 value: data.bulb === 0 ? 1 : 0,
                                 device: "bulb",
 
-                            }
+                            }, "Bulb"
                         )
                     }} className={`flex justify-center items-center font-bold w-[50px] h-[50px] ${data.bulb === 0 ? "bg-gray-600" : "bg-green-600"} rounded-full`}>
                         {
@@ -114,7 +118,7 @@ export function DialogBox() {
                     </div>
                 </div >
             case "Led":
-                return <div>
+                return <div className="flex w-full  flex-col justify-center items-center">
 
                     <SVGLed val={data.led as any} />
 
@@ -135,7 +139,7 @@ export function DialogBox() {
                             teamid: "c52RMB6",
                             value: val.hex,
                             device: "led",
-                        })
+                        }, "LED")
                         // getData();
 
                     }} color={data.led as string} />
@@ -144,7 +148,7 @@ export function DialogBox() {
                 return <div className="w-full flex gap-2 flex-col justify-center items-center">
                     <img src="/fan.svg" className={`w-[200px] animate-spin h-[200px] ${fanMap[data.fan as keyof typeof fanMap]}`} alt="" />
                     <div className="w-full  flex gap-2 items-center justify-center">{fanSpeed.map((v) => {
-                        return <span onClick={() => {
+                        return <span  onClick={() => {
                             dispatch(setData({
                                 ac: data.ac,
                                 bulb: data.bulb,
@@ -158,20 +162,20 @@ export function DialogBox() {
                                 teamid: "c52RMB6",
                                 value: v,
                                 device: "fan",
-                            })
+                            }, "Fan")
 
-                        }} className={`rounded-full ${data.fan === v ? "bg-green-600" : "bg-red-600"} p-3`}>{v}</span>
+                        }} className={`rounded-full cursor-pointer ${data.fan === v ? "bg-green-600" : "bg-red-600"} p-3`}>{v}</span>
                     })}</div>
                 </div>
             case "Ac":
-                return <div className="w-full h-full  items-center flex-col flex justify-center relative">
+                return <div className="w-full h-full bg-[#111111]  items-center flex-col flex justify-center relative">
                     <div className="w-full flex justify-center items-center">
                         <p className="absolute">{data.ac?.temp}&deg; C</p>
                         <CircularSlider
                             size={200}
                             trackWidth={4}
                             minValue={17}
-                            disabled={data.ac?.state===0}
+                            disabled={data.ac?.state === 0}
                             maxValue={29}
                             startAngle={40}
                             endAngle={320}
@@ -202,7 +206,7 @@ export function DialogBox() {
                                             state: data.ac?.state
                                         },
                                         device: "ac",
-                                    })
+                                    }, "AC")
                                 }
                             }}
 
@@ -215,7 +219,7 @@ export function DialogBox() {
                         dispatch(setData({
                             ac: {
                                 state: data.ac?.state == 0 ? 1 : 0,
-                                temp: data.ac?.temp  
+                                temp: data.ac?.temp
                             },
                             bulb: data.bulb,
                             fan: data.fan,
@@ -233,7 +237,7 @@ export function DialogBox() {
                                 },
                                 device: "ac",
 
-                            }
+                            }, "AC"
                         )
                     }} className={`flex justify-center items-center font-bold w-[50px] h-[50px] ${data.ac?.state === 0 ? "bg-gray-600" : "bg-green-600"} rounded-full`}>
                         {
@@ -245,18 +249,18 @@ export function DialogBox() {
     }
 
     useEffect(() => {
-        getData();
+        getDatas();
     }, [componentInfo.open])
     return (
-        <Dialog open={componentInfo?.open} onOpenChange={handleOnCloseDialog}>
+        <Dialog  open={componentInfo?.open} onOpenChange={handleOnCloseDialog}>
 
-            <DialogContent className="w-screen" >
-                {/* <DialogHeader>
-                    <DialogTitle>Edit profile</DialogTitle>
+            <DialogContent className="w-screen bg-[#111111]" >
+                <DialogHeader>
+                    <DialogTitle>{componentInfo.data?.name}</DialogTitle>
                     <DialogDescription>
-                        Make changes to your profile here. Click save when you're done.
+                       Control your {componentInfo.data?.name}
                     </DialogDescription>
-                </DialogHeader> */}
+                </DialogHeader>
 
                 <div className="w-full">
                     {
