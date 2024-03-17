@@ -14,7 +14,18 @@ interface InitialState {
     open:boolean
   },
 
-  data:{}
+  data:{
+    teamid:string|null,
+    teamName:string|null,
+    fan:number|null,
+    bulb:number|null,
+    led:string|null,
+    ac:null|{
+      temp:number|null,
+     state:number|null
+    
+    }
+  }
 }
 
 export const initialState: InitialState = {
@@ -23,7 +34,15 @@ export const initialState: InitialState = {
     open:false
   
  },
- data:{}
+ data:{
+  ac:null,
+  bulb:null,
+  fan:null,
+  led:null,
+  teamName:null,
+  teamid:null
+
+ }
 };
 
 const AcademicSlice = createSlice({
@@ -36,7 +55,8 @@ const AcademicSlice = createSlice({
     },
     setData: (state, action) => {
       state.data = action.payload;
-    }
+    },
+    
 
 
 

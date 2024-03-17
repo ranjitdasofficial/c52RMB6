@@ -2,6 +2,7 @@
 import React from 'react'
 import { Cards } from './Cards'
 import { DialogBox } from './Dialog'
+import { useAppSelector } from '@/Redux/hooks/hooks'
 
 
 
@@ -33,6 +34,7 @@ const cardDetails = [
     }
 ]
 const MainLayout = () => {
+    const data = useAppSelector((state)=>state.AcademicSlice.data);
     return (
         <div>
             <DialogBox />
@@ -44,7 +46,7 @@ const MainLayout = () => {
                             name: cardDetail.name,
                             description: cardDetail.description,
 
-                            image: cardDetail.image
+                            image: index===0?data.bulb===1?"/bulbon.svg":"/bulboff.svg":cardDetail.image
                         }
                     } />
                 ))}
